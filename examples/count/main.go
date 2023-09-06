@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/adamaho/realtime-go/pkg/realtime"
+	"github.com/adamaho/realtime/pkg/realtime"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )

@@ -1,4 +1,4 @@
-module github.com/adamaho/realtime-go
+module github.com/adamaho/realtime
 
 go 1.21.0
 
