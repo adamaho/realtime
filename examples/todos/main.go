@@ -19,17 +19,6 @@ type todo struct {
 	Checked     bool      `json:"checked"`
 }
 
-type todocreate struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-type todoupdate struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Checked     bool   `json:"checked"`
-}
-
 const SESSION_ID = "todos"
 
 // Handles checking the query param to see if a patch or the current set of data should be returned
@@ -63,7 +52,7 @@ func main() {
 	})
 
 	r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {
-		var newTodo todocreate
+		var newTodo todo
 
 		err := json.NewDecoder(r.Body).Decode(&newTodo)
 		if err != nil {
@@ -87,7 +76,7 @@ func main() {
 		todoIDParam := chi.URLParam(r, "todoID")
 		todoID, _ := uuid.Parse(todoIDParam)
 
-		var todoUpdate todoupdate
+		var todoUpdate todo
 
 		err := json.NewDecoder(r.Body).Decode(&todoUpdate)
 		if err != nil {
@@ -95,26 +84,17 @@ func main() {
 			return
 		}
 
-		var todoIndex int = -1
 		for index, todo := range todos {
 			if todo.Id == todoID {
-				todoIndex = index
-				break
+				todos[index].Title = todoUpdate.Title
+				todos[index].Description = todoUpdate.Description
+				todos[index].Checked = todoUpdate.Checked
+				mutationResponse(w, r, &rt, &todos)
+				return
 			}
 		}
 
-		if todoIndex == -1 {
-			http.Error(w, "Todo not found", http.StatusNotFound)
-		}
-
-		todos[todoIndex] = todo{
-			Id:          todoID,
-			Title:       todoUpdate.Title,
-			Description: todoUpdate.Description,
-			Checked:     todoUpdate.Checked,
-		}
-
-		mutationResponse(w, r, &rt, &todos)
+		http.Error(w, "Todo not found", http.StatusNotFound)
 	})
 
 	r.Delete("/todos/{todoID}", func(w http.ResponseWriter, r *http.Request) {

@@ -20,26 +20,20 @@ With data updates:
 curl -N -s https://localhost:3000/todos | jq
 ```
 
-With json patch updates:
-
-```bash
-curl -N -s https://localhost:3000/todos?patch=true | jq 
-```
-
 ### Create Todo
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription"}' https://localhost:3000/todos 
+curl -X POST -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription"}' https://localhost:3000/todos?patch=true 
 ```
 
 ### Update Todo
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription","checked":true}' https://localhost:3000/todos/<uuid> 
+curl -X PUT -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription","checked":true}' https://localhost:3000/todos/<uuid>?patch=true  
 ```
 
 ### Delete Todo
 
 ```bash
-curl -X DELETE https://localhost:3000/todos/<uuid> 
+curl -X DELETE https://localhost:3000/todos/<uuid>?patch=true  
 ```

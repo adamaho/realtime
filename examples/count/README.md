@@ -14,28 +14,20 @@ mkcert -install -cert-file ./cert.pem -key-file ./key.pem localhost
 
 ### Read Count 
 
-With data updates:
-
 ```bash
 curl -N -s https://localhost:3000/count | jq
-```
-
-With json patch updates:
-
-```bash
-curl -N -s https://localhost:3000/count?patch=true | jq 
 ```
 
 ### Increment Count
 
 ```bash
-curl -X POST https://localhost:3000/count/increment 
+curl -X POST https://localhost:3000/count/increment?patch=true 
 ```
 
 ### Decrement Count
 
 ```bash
-curl -X POST https://localhost:3000/count/decrement
+curl -X POST https://localhost:3000/count/decrement?patch=truet
 ```
 
 
