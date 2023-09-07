@@ -21,7 +21,6 @@ type todo struct {
 
 const SESSION_ID = "todos"
 
-// Handles checking the query param to see if a patch or the current set of data should be returned
 func mutationResponse(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d *[]todo) {
 	countJson, _ := json.Marshal(d)
 
