@@ -27,7 +27,7 @@ curl -X POST https://localhost:3000/count/increment?patch=true
 ### Decrement Count
 
 ```bash
-curl -X POST https://localhost:3000/count/decrement?patch=truet
+curl -X POST https://localhost:3000/count/decrement?patch=true
 ```
 
 
