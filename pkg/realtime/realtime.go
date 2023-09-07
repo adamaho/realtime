@@ -39,8 +39,9 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: allow options and make it so that stream can be passed as a boolean instead of assuming the header
 // TODO: specify storage method for previous data (in memory or redis)
 // TODO: create standard response type with data struct
+// TODO: write some good comments on all of this stuff
 
-// Handles creating a stream and channel if the X-Muma-Stream header is set. If header
+// Handles creating a stream and channel. If header
 // is not set, the raw json message is returned to the user like a standard REST api.
 func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, d json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()

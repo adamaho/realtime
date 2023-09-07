@@ -1,0 +1,147 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/adamaho/realtime/pkg/realtime"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/google/uuid"
+)
+
+type todo struct {
+	Id          uuid.UUID `json:"todo_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Checked     bool      `json:"checked"`
+}
+
+type todocreate struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+type todoupdate struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Checked     bool   `json:"checked"`
+}
+
+const SESSION_ID = "todos"
+
+// Handles checking the query param to see if a patch or the current set of data should be returned
+func mutationResponse(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d *[]todo) {
+	countJson, _ := json.Marshal(d)
+
+	var msg json.RawMessage
+	msg = countJson
+
+	p := r.URL.Query().Get("patch")
+	if p == "true" {
+		f, _ := rt.CreatePatch(countJson, SESSION_ID)
+		msg = f
+	}
+
+	rt.PublishMsg(msg, SESSION_ID)
+	w.Write([]byte("todos updated."))
+}
+
+func main() {
+	r := chi.NewRouter()
+
+	todos := make([]todo, 0)
+	rt := realtime.New()
+
+	r.Use(middleware.Logger)
+
+	r.Get("/todos", func(w http.ResponseWriter, r *http.Request) {
+		json, _ := json.Marshal(todos)
+		rt.Stream(w, r, json, SESSION_ID, true)
+	})
+
+	r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {
+		var newTodo todocreate
+
+		err := json.NewDecoder(r.Body).Decode(&newTodo)
+		if err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		todo := todo{
+			Id:          uuid.New(),
+			Title:       newTodo.Title,
+			Description: newTodo.Description,
+			Checked:     false,
+		}
+
+		todos = append(todos, todo)
+
+		mutationResponse(w, r, &rt, &todos)
+	})
+
+	r.Put("/todos/{todoID}", func(w http.ResponseWriter, r *http.Request) {
+		todoIDParam := chi.URLParam(r, "todoID")
+		todoID, _ := uuid.Parse(todoIDParam)
+
+		var todoUpdate todoupdate
+
+		err := json.NewDecoder(r.Body).Decode(&todoUpdate)
+		if err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		var todoIndex int = -1
+		for index, todo := range todos {
+			if todo.Id == todoID {
+				todoIndex = index
+				break
+			}
+		}
+
+		if todoIndex == -1 {
+			http.Error(w, "Todo not found", http.StatusNotFound)
+		}
+
+		todos[todoIndex] = todo{
+			Id:          todoID,
+			Title:       todoUpdate.Title,
+			Description: todoUpdate.Description,
+			Checked:     todoUpdate.Checked,
+		}
+
+		mutationResponse(w, r, &rt, &todos)
+	})
+
+	r.Delete("/todos/{todoID}", func(w http.ResponseWriter, r *http.Request) {
+		todoIDParam := chi.URLParam(r, "todoID")
+		todoID, _ := uuid.Parse(todoIDParam)
+
+		var todoIndex int = -1
+		for index, todo := range todos {
+			if todo.Id == todoID {
+				todoIndex = index
+				break
+			}
+		}
+
+		if todoIndex == -1 {
+			http.Error(w, "Todo not found", http.StatusNotFound)
+		}
+
+		todos = append(todos[:todoIndex], todos[todoIndex+1:]...)
+
+		mutationResponse(w, r, &rt, &todos)
+	})
+
+	fmt.Println("Server started at https://localhost:3000")
+	err := http.ListenAndServeTLS(":3000", "cert.pem", "key.pem", r)
+
+	if err != nil {
+		log.Fatal("Failed to start server:", err)
+	}
+}
