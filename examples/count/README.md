@@ -1,6 +1,6 @@
 # Count
 
-Increment and decrement a common counter
+Increment and decrement a common counter.
 
 ## Running the Example
 
@@ -9,6 +9,28 @@ Increment and decrement a common counter
 ```bash
 mkcert -install -cert-file ./cert.pem -key-file ./key.pem localhost
 ```
+
+## Usage 
+
+### Read Count 
+
+```bash
+curl -N -s https://localhost:3000/count | jq
+```
+
+### Increment Count
+
+```bash
+curl -X POST https://localhost:3000/count/increment?patch=true 
+```
+
+### Decrement Count
+
+```bash
+curl -X POST https://localhost:3000/count/decrement?patch=truet
+```
+
+
 
 
 

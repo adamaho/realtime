@@ -41,18 +41,18 @@ func main() {
 
 	r.Use(middleware.Logger)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/count", func(w http.ResponseWriter, r *http.Request) {
 		json, _ := json.Marshal(c)
 		fmt.Println(json)
 		rt.Stream(w, r, json, SESSION_ID, true)
 	})
 
-	r.Post("/increment", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/count/increment", func(w http.ResponseWriter, r *http.Request) {
 		c.Count += 1
 		updateCount(w, r, &rt, &c)
 	})
 
-	r.Post("/decrement", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/count/decrement", func(w http.ResponseWriter, r *http.Request) {
 		c.Count -= 1
 		updateCount(w, r, &rt, &c)
 	})
