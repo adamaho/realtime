@@ -6,7 +6,6 @@ func add(a int, b int) int {
 	return a + b
 }
 
-// asdfasdfasdfasdf
 func TestAdds2Plus2(t *testing.T) {
 	result := add(2, 2)
 	expected := 4

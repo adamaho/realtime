@@ -10,24 +10,24 @@ import (
 	"github.com/mattbaird/jsonpatch"
 )
 
-type Session struct {
-	Clients []*Client
+type session struct {
+	Clients []*client
 	Data    json.RawMessage
 }
 
-func newSession(data json.RawMessage) Session {
-	return Session{Clients: make([]*Client, 0), Data: data}
+func newSession(data json.RawMessage) session {
+	return session{Clients: make([]*client, 0), Data: data}
 }
 
-func (s *Session) addClient(ch *chan []byte) uuid.UUID {
+func (s *session) addClient(ch *chan []byte) uuid.UUID {
 	clientID := uuid.New()
-	client := Client{clientID: clientID, Channel: ch}
+	client := client{clientID: clientID, Channel: ch}
 	s.Clients = append(s.Clients, &client)
 	return clientID
 }
 
-func (s *Session) removeClient(clientID uuid.UUID) int {
-	newClients := make([]*Client, 0)
+func (s *session) removeClient(clientID uuid.UUID) int {
+	newClients := make([]*client, 0)
 
 	for _, c := range s.Clients {
 		if c.clientID != clientID {
@@ -39,20 +39,20 @@ func (s *Session) removeClient(clientID uuid.UUID) int {
 	return len(s.Clients)
 }
 
-type Client struct {
+type client struct {
 	clientID uuid.UUID
 	Channel  *chan []byte
 }
 
 type Realtime struct {
-	sessions map[string]*Session
+	sessions map[string]*session
 }
 
 func New() Realtime {
-	return Realtime{sessions: make(map[string]*Session, 0)}
+	return Realtime{sessions: make(map[string]*session, 0)}
 }
 
-func (rt *Realtime) getOrCreateSession(sessionID string, data json.RawMessage) *Session {
+func (rt *Realtime) getOrCreateSession(sessionID string, data json.RawMessage) *session {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
@@ -73,6 +73,8 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: write some good comments on all of this stuff
 // TODO: figure out how to write some tests
 // TODO: tighten up the api and make sure things that are public should be public
+// TODO: fix up error messages and make things more informative
+// TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
 func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
