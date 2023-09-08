@@ -71,6 +71,8 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: allow options and make it so that stream can be passed as a boolean instead of assuming the header
 // TODO: specify storage method for previous data (in memory or redis)
 // TODO: write some good comments on all of this stuff
+// TODO: figure out how to write some tests
+// TODO: tighten up the api and make sure things that are public should be public
 func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
