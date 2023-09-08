@@ -95,13 +95,7 @@ func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.Raw
 	clientID := session.addClient(&ch)
 	w.Header().Set("Content-Type", "application/json+ndjsonpatch")
 	w.WriteHeader(http.StatusOK)
-
-	json, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, "Failed to marshal data", http.StatusInternalServerError)
-	}
-
-	fmt.Fprintf(w, "%s\n", json)
+	fmt.Fprintf(w, "%s\n", data)
 	flusher.Flush()
 
 	for {
