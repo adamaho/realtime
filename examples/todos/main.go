@@ -21,17 +21,16 @@ type todo struct {
 
 const SESSION_ID = "todos"
 
-func mutationResponse(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d []todo) {
+func mutationResponse(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d *[]todo) {
+	countJson, _ := json.Marshal(d)
 
 	var msg json.RawMessage
+	msg = countJson
 
 	p := r.URL.Query().Get("patch")
 	if p == "true" {
-		f, _ := rt.CreatePatch(d, SESSION_ID)
+		f, _ := rt.CreatePatch(countJson, SESSION_ID)
 		msg = f
-	} else {
-		todoJson, _ := json.Marshal(d)
-		msg = todoJson
 	}
 
 	rt.PublishMsg(msg, SESSION_ID)
@@ -69,7 +68,7 @@ func main() {
 
 		todos = append(todos, todo)
 
-		mutationResponse(w, r, &rt, todos)
+		mutationResponse(w, r, &rt, &todos)
 	})
 
 	r.Put("/todos/{todoID}", func(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +88,7 @@ func main() {
 				todos[index].Title = todoUpdate.Title
 				todos[index].Description = todoUpdate.Description
 				todos[index].Checked = todoUpdate.Checked
-				mutationResponse(w, r, &rt, todos)
+				mutationResponse(w, r, &rt, &todos)
 				return
 			}
 		}
@@ -115,7 +114,7 @@ func main() {
 
 		todos = append(todos[:todoIndex], todos[todoIndex+1:]...)
 
-		mutationResponse(w, r, &rt, todos)
+		mutationResponse(w, r, &rt, &todos)
 	})
 
 	fmt.Println("Server started at https://localhost:3000")

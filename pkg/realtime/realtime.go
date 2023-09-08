@@ -12,11 +12,11 @@ import (
 
 type Session struct {
 	Clients []*Client
-	Data    interface{}
+	Data    json.RawMessage
 }
 
-func newSession(d interface{}) Session {
-	return Session{Clients: make([]*Client, 0), Data: d}
+func newSession(data json.RawMessage) Session {
+	return Session{Clients: make([]*Client, 0), Data: data}
 }
 
 func (s *Session) addClient(ch *chan []byte) uuid.UUID {
@@ -52,7 +52,7 @@ func New() Realtime {
 	return Realtime{sessions: make(map[string]*Session, 0)}
 }
 
-func (rt *Realtime) getOrCreateSession(sessionID string, data interface{}) *Session {
+func (rt *Realtime) getOrCreateSession(sessionID string, data json.RawMessage) *Session {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
@@ -71,19 +71,13 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: allow options and make it so that stream can be passed as a boolean instead of assuming the header
 // TODO: specify storage method for previous data (in memory or redis)
 // TODO: write some good comments on all of this stuff
-func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data interface{}, sessionID string, stream bool) {
+func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
 	if !stream {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-
-		json, err := json.Marshal(data)
-		if err != nil {
-			http.Error(w, "Failed to marshal data", http.StatusInternalServerError)
-		}
-
-		w.Write(json)
+		w.Write(data)
 		return
 	}
 
@@ -127,26 +121,14 @@ func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data interfac
 	}
 }
 
-func (rt *Realtime) CreatePatch(target interface{}, sessionID string) (json.RawMessage, error) {
+func (rt *Realtime) CreatePatch(target json.RawMessage, sessionID string) (json.RawMessage, error) {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
 		return nil, fmt.Errorf("Failed to get session for sessionID: %s", sessionID)
 	}
 
-	currentJson, err := json.Marshal(session.Data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	targetJson, err := json.Marshal(target)
-
-	if err != nil {
-		return nil, err
-	}
-
-	patch, _ := jsonpatch.CreatePatch(currentJson, targetJson)
+	patch, _ := jsonpatch.CreatePatch(session.Data, target)
 	patchJson, err := json.Marshal(patch)
 
 	if err != nil {

@@ -17,16 +17,16 @@ type data struct {
 
 const SESSION_ID = "count"
 
-func updateCount(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d data) {
+func updateCount(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d *data) {
+	countJson, _ := json.Marshal(d)
+
 	var msg json.RawMessage
+	msg = countJson
 
 	p := r.URL.Query().Get("patch")
 	if p == "true" {
-		f, _ := rt.CreatePatch(d, SESSION_ID)
+		f, _ := rt.CreatePatch(countJson, SESSION_ID)
 		msg = f
-	} else {
-		countJson, _ := json.Marshal(d)
-		msg = countJson
 	}
 
 	rt.PublishMsg(msg, SESSION_ID)
@@ -42,17 +42,19 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Get("/count", func(w http.ResponseWriter, r *http.Request) {
-		rt.Stream(w, r, c, SESSION_ID, true)
+		json, _ := json.Marshal(c)
+		fmt.Println(json)
+		rt.Stream(w, r, json, SESSION_ID, true)
 	})
 
 	r.Post("/count/increment", func(w http.ResponseWriter, r *http.Request) {
 		c.Count += 1
-		updateCount(w, r, &rt, c)
+		updateCount(w, r, &rt, &c)
 	})
 
 	r.Post("/count/decrement", func(w http.ResponseWriter, r *http.Request) {
 		c.Count -= 1
-		updateCount(w, r, &rt, c)
+		updateCount(w, r, &rt, &c)
 	})
 
 	fmt.Println("Server started at https://localhost:3000")
