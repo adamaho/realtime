@@ -1,5 +1,0 @@
-{
-  "tasks": {
-    "dev": "deno run --watch --allow-net --unsafely-ignore-certificate-errors main.ts"
-  }
-}
