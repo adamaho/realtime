@@ -43,7 +43,6 @@ func main() {
 
 	r.Get("/count", func(w http.ResponseWriter, r *http.Request) {
 		json, _ := json.Marshal(c)
-		fmt.Println(json)
 		rt.Stream(w, r, json, SESSION_ID, true)
 	})
 

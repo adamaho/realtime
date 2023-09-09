@@ -75,6 +75,7 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: tighten up the api and make sure things that are public should be public
 // TODO: fix up error messages and make things more informative
 // TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
+// TODO: consider adding option to specify the channel buffer size
 func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
@@ -91,7 +92,7 @@ func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.Raw
 		return
 	}
 
-	ch := make(chan []byte, 10)
+	ch := make(chan []byte, 16)
 	defer close(ch)
 
 	session := rt.getOrCreateSession(sessionID, data)
