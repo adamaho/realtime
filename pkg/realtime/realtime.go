@@ -76,6 +76,8 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: fix up error messages and make things more informative
 // TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
 // TODO: consider adding option to specify the channel buffer size
+
+// TODO: consider returning an error here incase something goes wrong internally
 func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
