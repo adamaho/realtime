@@ -17,19 +17,12 @@ type data struct {
 
 const SESSION_ID = "count"
 
-func updateCount(w http.ResponseWriter, r *http.Request, rt *realtime.Realtime, d *data) {
+func updateCount(w http.ResponseWriter, rt *realtime.Realtime, d *data) {
 	countJson, _ := json.Marshal(d)
-
-	var msg json.RawMessage
-	msg = countJson
-
-	p := r.URL.Query().Get("patch")
-	if p == "true" {
-		f, _ := rt.CreatePatch(countJson, SESSION_ID)
-		msg = f
+	f, _ := rt.CreatePatch(countJson, SESSION_ID)
+	if len(f) != 0 {
+		rt.SendMessage(f, SESSION_ID)
 	}
-
-	rt.PublishMsg(msg, SESSION_ID)
 	w.Write([]byte("count updated."))
 }
 
@@ -48,12 +41,12 @@ func main() {
 
 	r.Post("/count/increment", func(w http.ResponseWriter, r *http.Request) {
 		c.Count += 1
-		updateCount(w, r, &rt, &c)
+		updateCount(w, &rt, &c)
 	})
 
 	r.Post("/count/decrement", func(w http.ResponseWriter, r *http.Request) {
 		c.Count -= 1
-		updateCount(w, r, &rt, &c)
+		updateCount(w, &rt, &c)
 	})
 
 	fmt.Println("Server started at https://localhost:3000")

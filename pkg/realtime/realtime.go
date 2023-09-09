@@ -3,7 +3,6 @@ package realtime
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -72,7 +71,6 @@ func (rt *Realtime) removeSession(sessionID string) {
 // TODO: specify storage method for previous data (in memory or redis)
 // TODO: write some good comments on all of this stuff
 // TODO: figure out how to write some tests
-// TODO: tighten up the api and make sure things that are public should be public
 // TODO: fix up error messages and make things more informative
 // TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
 // TODO: consider adding option to specify the channel buffer size
@@ -127,11 +125,13 @@ func (rt *Realtime) CreatePatch(target json.RawMessage, sessionID string) (json.
 		return nil, fmt.Errorf("Failed to get session for sessionID: %s", sessionID)
 	}
 
-	patch, _ := jsonpatch.CreatePatch(session.Data, target)
-	patchJson, err := json.Marshal(patch)
-
+	patch, err := jsonpatch.CreatePatch(session.Data, target)
 	if err != nil {
-		log.Print("Failed to marshal json for patch")
+		return nil, err
+	}
+
+	patchJson, err := json.Marshal(patch)
+	if err != nil {
 		return nil, err
 	}
 
@@ -140,7 +140,7 @@ func (rt *Realtime) CreatePatch(target json.RawMessage, sessionID string) (json.
 	return patchJson, nil
 }
 
-func (rt *Realtime) PublishMsg(msg json.RawMessage, sessionID string) error {
+func (rt *Realtime) SendMessage(msg json.RawMessage, sessionID string) error {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {

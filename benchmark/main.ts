@@ -1,3 +1,5 @@
+// Note: This is super hack and probably not representative
+
 let msgCount = 0;
 
 const clientCount = 16;
