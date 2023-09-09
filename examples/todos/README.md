@@ -29,11 +29,11 @@ curl -X POST -H "Content-Type: application/json" -d '{"title":"hello world","des
 ### Update Todo
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription","checked":true}' https://localhost:3000/todos/<uuid>?patch=true  
+curl -X PUT -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription","checked":true}' https://localhost:3000/todos/<uuid>
 ```
 
 ### Delete Todo
 
 ```bash
-curl -X DELETE https://localhost:3000/todos/<uuid>?patch=true  
+curl -X DELETE https://localhost:3000/todos/<uuid>
 ```

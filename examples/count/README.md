@@ -21,13 +21,13 @@ curl -N -s https://localhost:3000/count | jq
 ### Increment Count
 
 ```bash
-curl -X POST https://localhost:3000/count/increment?patch=true 
+curl -X POST https://localhost:3000/count/increment
 ```
 
 ### Decrement Count
 
 ```bash
-curl -X POST https://localhost:3000/count/decrement?patch=true
+curl -X POST https://localhost:3000/count/decrement
 ```
 
 

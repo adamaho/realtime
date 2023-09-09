@@ -21,14 +21,9 @@ type todo struct {
 
 const SESSION_ID = "todos"
 
-func mutationResponse(w http.ResponseWriter, rt *realtime.Realtime, d *[]todo) {
-	countJson, _ := json.Marshal(d)
-
-	f, _ := rt.CreatePatch(countJson, SESSION_ID)
-	if len(f) != 0 {
-		rt.SendMessage(f, SESSION_ID)
-	}
-
+func mutationResponse(w http.ResponseWriter, rt *realtime.Realtime, todos *[]todo) {
+	todosJson, _ := json.Marshal(todos)
+	rt.SendMessage(todosJson, SESSION_ID)
 	w.Write([]byte("todos updated."))
 }
 

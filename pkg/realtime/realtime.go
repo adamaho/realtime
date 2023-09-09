@@ -67,6 +67,7 @@ func (rt *Realtime) removeSession(sessionID string) {
 	delete(rt.sessions, sessionID)
 }
 
+// TODO: consider if it is possible to have one instance of Realtime that can be shared via context since we have the concept of sessions now
 // TODO: figure out how to configure the options
 // TODO: specify storage method for previous data (in memory or redis)
 // TODO: implement redis cache for previous data
@@ -119,7 +120,7 @@ func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.R
 	}
 }
 
-func (rt *Realtime) CreatePatch(target json.RawMessage, sessionID string) (json.RawMessage, error) {
+func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.RawMessage, error) {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
@@ -141,15 +142,22 @@ func (rt *Realtime) CreatePatch(target json.RawMessage, sessionID string) (json.
 	return patchJson, nil
 }
 
-func (rt *Realtime) SendMessage(msg json.RawMessage, sessionID string) error {
+func (rt *Realtime) SendMessage(target json.RawMessage, sessionID string) error {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
 		return fmt.Errorf("Failed to find session with sessionID: %s", sessionID)
 	}
 
-	for _, client := range session.Clients {
-		*client.Channel <- msg
+	patch, err := rt.createPatch(target, sessionID)
+	if err != nil {
+		return err
+	}
+
+	if len(patch) != 0 {
+		for _, client := range session.Clients {
+			*client.Channel <- patch
+		}
 	}
 
 	return nil

@@ -19,10 +19,7 @@ const SESSION_ID = "count"
 
 func updateCount(w http.ResponseWriter, rt *realtime.Realtime, d *data) {
 	countJson, _ := json.Marshal(d)
-	f, _ := rt.CreatePatch(countJson, SESSION_ID)
-	if len(f) != 0 {
-		rt.SendMessage(f, SESSION_ID)
-	}
+	rt.SendMessage(countJson, SESSION_ID)
 	w.Write([]byte("count updated."))
 }
 
