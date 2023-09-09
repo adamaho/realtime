@@ -42,7 +42,7 @@ func main() {
 
 	r.Get("/todos", func(w http.ResponseWriter, r *http.Request) {
 		json, _ := json.Marshal(todos)
-		rt.Stream(w, r, json, SESSION_ID, true)
+		rt.Response(w, r, json, SESSION_ID, true)
 	})
 
 	r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {

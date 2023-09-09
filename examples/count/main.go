@@ -36,7 +36,7 @@ func main() {
 
 	r.Get("/count", func(w http.ResponseWriter, r *http.Request) {
 		json, _ := json.Marshal(c)
-		rt.Stream(w, r, json, SESSION_ID, true)
+		rt.Response(w, r, json, SESSION_ID, true)
 	})
 
 	r.Post("/count/increment", func(w http.ResponseWriter, r *http.Request) {

@@ -67,14 +67,15 @@ func (rt *Realtime) removeSession(sessionID string) {
 	delete(rt.sessions, sessionID)
 }
 
-// TODO: allow options and make it so that stream can be passed as a boolean instead of assuming the header
+// TODO: figure out how to configure the options
 // TODO: specify storage method for previous data (in memory or redis)
+// TODO: implement redis cache for previous data
 // TODO: write some good comments on all of this stuff
 // TODO: figure out how to write some tests
 // TODO: fix up error messages and make things more informative
 // TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
 // TODO: consider adding option to specify the channel buffer size
-func (rt *Realtime) Stream(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
+func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
 	ctx := r.Context()
 
 	if !stream {
