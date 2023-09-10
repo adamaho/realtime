@@ -67,34 +67,71 @@ func (rt *Realtime) removeSession(sessionID string) {
 	delete(rt.sessions, sessionID)
 }
 
+// Options to include
+// 1. WithBufferSize(10)
+// 2. WithStorage("memory")
+// 3. WithStreamRequestHeader("x-stream")
+
 // TODO: consider if it is possible to have one instance of Realtime that can be shared via context since we have the concept of sessions now
-// TODO: figure out how to configure the options
-// TODO: specify storage method for previous data (in memory or redis)
 // TODO: implement redis cache for previous data
 // TODO: write some good comments on all of this stuff
 // TODO: figure out how to write some tests
 // TODO: fix up error messages and make things more informative
-// TODO: consider adding an option for the user to specify the header to look for for streaming e.g x-stream: true
-// TODO: consider adding option to specify the channel buffer size
+
+type responseOptions struct {
+	bufferSize          int
+	storage             string
+	streamRequestHeader string
+}
+
+func ResponseOptions(options ...func(*responseOptions)) *responseOptions {
+	opts := &responseOptions{
+		bufferSize:          10,
+		storage:             "memory",
+		streamRequestHeader: "x-stream",
+	}
+	for _, o := range options {
+		o(opts)
+	}
+	return opts
+}
+
+func (opts *responseOptions) WithBufferSize(size int) func(*responseOptions) {
+	return func(opts *responseOptions) {
+		opts.bufferSize = size
+	}
+}
+
+func (opts *responseOptions) WithStorage(storage string) func(*responseOptions) {
+	return func(opts *responseOptions) {
+		opts.storage = storage
+	}
+}
+
+func (opts *responseOptions) WithStreamRequestHeader(header string) func(*responseOptions) {
+	return func(opts *responseOptions) {
+		opts.streamRequestHeader = header
+	}
+}
 
 // TODO: consider returning an error here incase something goes wrong internally
-func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, stream bool) {
+func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, options *responseOptions) error {
 	ctx := r.Context()
 
-	if !stream {
+	stream := r.Header.Get(options.streamRequestHeader)
+	if stream != "true" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-		return
+		return nil
 	}
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
-		return
+		return fmt.Errorf("Failed to get http.Flusher")
 	}
 
-	ch := make(chan []byte, 16)
+	ch := make(chan []byte, options.bufferSize)
 	defer close(ch)
 
 	session := rt.getOrCreateSession(sessionID, data)
@@ -112,7 +149,7 @@ func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.R
 			if count == 0 {
 				rt.removeSession(sessionID)
 			}
-			return
+			return nil
 		case value := <-ch:
 			if len(value) > 0 {
 				fmt.Fprintf(w, "%s\n", value)

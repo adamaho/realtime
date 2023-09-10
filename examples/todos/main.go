@@ -37,7 +37,7 @@ func main() {
 
 	r.Get("/todos", func(w http.ResponseWriter, r *http.Request) {
 		json, _ := json.Marshal(todos)
-		rt.Response(w, r, json, SESSION_ID, true)
+		rt.Response(w, r, json, SESSION_ID, realtime.ResponseOptions())
 	})
 
 	r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {

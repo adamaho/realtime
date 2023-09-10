@@ -17,13 +17,13 @@ mkcert -install -cert-file ./cert.pem -key-file ./key.pem localhost
 With data updates:
 
 ```bash
-curl -N -s https://localhost:3000/todos | jq
+curl -N -s -H "x-stream: true" https://localhost:3000/todos | jq
 ```
 
 ### Create Todo
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"title":"hello world","description":"this is the decription"}' https://localhost:3000/todos?patch=true 
+curl -X POST -H "Content-Type: application/json"  -d '{"title":"hello world","description":"this is the decription"}' https://localhost:3000/todos?patch=true 
 ```
 
 ### Update Todo

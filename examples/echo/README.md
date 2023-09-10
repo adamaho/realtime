@@ -1,6 +1,6 @@
-# Count
+# Echo Count
 
-Increment and decrement a common counter.
+Increment and decrement a common counter using the echo framework.
 
 ## Running the Example
 
@@ -29,10 +29,4 @@ curl -X POST https://localhost:3000/count/increment
 ```bash
 curl -X POST https://localhost:3000/count/decrement
 ```
-
-
-
-
-
-
 
