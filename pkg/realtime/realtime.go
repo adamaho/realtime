@@ -1,3 +1,6 @@
+// TODO: implement redis cache for previous data for cases where there is a lot of data
+// TODO: figure out how to write some tests
+
 package realtime
 
 import (
@@ -47,6 +50,7 @@ type Realtime struct {
 	sessions map[string]*session
 }
 
+// New creates a new instance of realtime
 func New() Realtime {
 	return Realtime{sessions: make(map[string]*session, 0)}
 }
@@ -67,27 +71,15 @@ func (rt *Realtime) removeSession(sessionID string) {
 	delete(rt.sessions, sessionID)
 }
 
-// Options to include
-// 1. WithBufferSize(10)
-// 2. WithStorage("memory")
-// 3. WithStreamRequestHeader("x-stream")
-
-// TODO: consider if it is possible to have one instance of Realtime that can be shared via context since we have the concept of sessions now
-// TODO: implement redis cache for previous data
-// TODO: write some good comments on all of this stuff
-// TODO: figure out how to write some tests
-// TODO: fix up error messages and make things more informative
-
 type responseOptions struct {
 	bufferSize          int
-	storage             string
 	streamRequestHeader string
 }
 
+// ResponseOptions returns a struct of options to be passed to the Response instance method on Realtime
 func ResponseOptions(options ...func(*responseOptions)) *responseOptions {
 	opts := &responseOptions{
 		bufferSize:          10,
-		storage:             "memory",
 		streamRequestHeader: "x-stream",
 	}
 	for _, o := range options {
@@ -96,25 +88,31 @@ func ResponseOptions(options ...func(*responseOptions)) *responseOptions {
 	return opts
 }
 
+// WithBufferSize returns a function that sets the bufferSize for the Response with the given size
+//
+// Default: 10
 func (opts *responseOptions) WithBufferSize(size int) func(*responseOptions) {
 	return func(opts *responseOptions) {
 		opts.bufferSize = size
 	}
 }
 
-func (opts *responseOptions) WithStorage(storage string) func(*responseOptions) {
-	return func(opts *responseOptions) {
-		opts.storage = storage
-	}
-}
-
+// WithStreamRequestHeader returns a function that sets the streamRequestHeader for the Response with the given header.
+// When `true` is passed as the value for the header, Response will return a stream of jsonpatch updates when the data changes
+//
+// Default: "x-stream"
 func (opts *responseOptions) WithStreamRequestHeader(header string) func(*responseOptions) {
 	return func(opts *responseOptions) {
 		opts.streamRequestHeader = header
 	}
 }
 
-// TODO: consider returning an error here incase something goes wrong internally
+// Response takes the provided data, sessionID, and options to produce an api response.
+// If the ResponseOptions streamRequestHeader is set to true the provided data will be returned, the connection to the client
+// will remain open, and subsequent updates to the data via the SendMessage method will be send to the client in the form of non-deliminated
+// jsonpatch's.
+// If the streamRequestHeader is falsy, the data will be immediately returned and the client connection will be closed. This mimics the
+// traditional json api approach.
 func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.RawMessage, sessionID string, options *responseOptions) error {
 	ctx := r.Context()
 
@@ -163,7 +161,7 @@ func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
-		return nil, fmt.Errorf("Failed to get session for sessionID: %s", sessionID)
+		return nil, fmt.Errorf("Failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
 	}
 
 	patch, err := jsonpatch.CreatePatch(session.Data, target)
@@ -181,11 +179,15 @@ func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.
 	return patchJson, nil
 }
 
+// Send message creates a new json patch from the diff of the provided target json and the current
+// data in memory that is stored under the provided sessionID.
+// This is typically called after performing a mutation (PUT, PATCH, POST, DELETE) to send the patch to all connected clients
+// for the provided sessionID
 func (rt *Realtime) SendMessage(target json.RawMessage, sessionID string) error {
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
-		return fmt.Errorf("Failed to find session with sessionID: %s", sessionID)
+		return fmt.Errorf("Failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
 	}
 
 	patch, err := rt.createPatch(target, sessionID)
