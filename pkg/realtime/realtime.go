@@ -91,7 +91,7 @@ func ResponseOptions(options ...func(*responseOptions)) *responseOptions {
 // WithBufferSize returns a function that sets the bufferSize for the Response with the given size
 //
 // Default: 10
-func (opts *responseOptions) WithBufferSize(size int) func(*responseOptions) {
+func WithBufferSize(size int) func(*responseOptions) {
 	return func(opts *responseOptions) {
 		opts.bufferSize = size
 	}
@@ -101,7 +101,7 @@ func (opts *responseOptions) WithBufferSize(size int) func(*responseOptions) {
 // When `true` is passed as the value for the header, Response will return a stream of jsonpatch updates when the data changes
 //
 // Default: "x-stream"
-func (opts *responseOptions) WithStreamRequestHeader(header string) func(*responseOptions) {
+func WithStreamRequestHeader(header string) func(*responseOptions) {
 	return func(opts *responseOptions) {
 		opts.streamRequestHeader = header
 	}
@@ -126,7 +126,7 @@ func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.R
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		return fmt.Errorf("Failed to get http.Flusher")
+		return fmt.Errorf("failed to get http.Flusher")
 	}
 
 	ch := make(chan []byte, options.bufferSize)
@@ -161,7 +161,7 @@ func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
-		return nil, fmt.Errorf("Failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
+		return nil, fmt.Errorf("failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
 	}
 
 	patch, err := jsonpatch.CreatePatch(session.Data, target)
@@ -187,7 +187,7 @@ func (rt *Realtime) SendMessage(target json.RawMessage, sessionID string) error 
 	session, ok := rt.sessions[sessionID]
 
 	if !ok {
-		return fmt.Errorf("Failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
+		return fmt.Errorf("failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
 	}
 
 	patch, err := rt.createPatch(target, sessionID)
