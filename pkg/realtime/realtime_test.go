@@ -1,25 +1,21 @@
 package realtime
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-type Data struct {
-	Count int `json:"count"`
-}
+const EXPECTED = `{"count":0}`
 
 func TestResponseWithoutStreamingHeader(t *testing.T) {
-	initial, _ := json.Marshal(Data{Count: 0})
 	rt := New()
 
 	r := httptest.NewRequest(http.MethodGet, "/count", nil)
 	w := httptest.NewRecorder()
 
-	rt.Response(w, r, initial, "count", ResponseOptions())
+	rt.Response(w, r, []byte(EXPECTED), "count", ResponseOptions())
 
 	result := w.Result()
 	defer result.Body.Close()
@@ -41,7 +37,7 @@ func TestResponseWithoutStreamingHeader(t *testing.T) {
 		t.Errorf("expected error to be nil, received %v", err)
 	}
 
-	if string(actual) != string(initial) {
-		t.Errorf("expected response body to be %s, received %s", initial, actual)
+	if string(actual) != EXPECTED {
+		t.Errorf("expected response body to be %s, received %s", EXPECTED, actual)
 	}
 }
