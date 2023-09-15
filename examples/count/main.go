@@ -17,12 +17,6 @@ type data struct {
 
 const SESSION_ID = "count"
 
-func updateCount(w http.ResponseWriter, rt *realtime.Realtime, d *data) {
-	countJson, _ := json.Marshal(d)
-	rt.SendMessage(countJson, SESSION_ID)
-	w.Write([]byte("count updated."))
-}
-
 func main() {
 	r := chi.NewRouter()
 
@@ -31,19 +25,30 @@ func main() {
 
 	r.Use(middleware.Logger)
 
+	j, _ := json.Marshal(c)
+
 	r.Get("/count", func(w http.ResponseWriter, r *http.Request) {
-		json, _ := json.Marshal(c)
-		rt.Response(w, r, json, SESSION_ID, realtime.ResponseOptions())
+		rt.Response(w, r, j, SESSION_ID, realtime.ResponseOptions(realtime.WithBufferSize(0)))
+	})
+
+	r.Post("/count/foo", func(w http.ResponseWriter, r *http.Request) {
+		c.Count += 1
+		fmt.Println(c.Count)
+		w.Write([]byte("count updated."))
 	})
 
 	r.Post("/count/increment", func(w http.ResponseWriter, r *http.Request) {
 		c.Count += 1
-		updateCount(w, &rt, &c)
+		j, _ := json.Marshal(c)
+		rt.SendMessage(j, SESSION_ID)
+		w.Write([]byte("count updated."))
 	})
 
 	r.Post("/count/decrement", func(w http.ResponseWriter, r *http.Request) {
 		c.Count -= 1
-		updateCount(w, &rt, &c)
+		j, _ := json.Marshal(c)
+		rt.SendMessage(j, SESSION_ID)
+		w.Write([]byte("count updated."))
 	})
 
 	fmt.Println("Server started at https://localhost:3000")

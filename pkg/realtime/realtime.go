@@ -13,32 +13,32 @@ import (
 )
 
 type session struct {
-	Clients []*client
-	Data    json.RawMessage
+	clients []*client
+	data    json.RawMessage
 }
 
 func newSession(data json.RawMessage) session {
-	return session{Clients: make([]*client, 0), Data: data}
+	return session{clients: make([]*client, 0), data: data}
 }
 
 func (s *session) addClient(ch *chan []byte) uuid.UUID {
 	clientID := uuid.New()
 	client := client{clientID: clientID, Channel: ch}
-	s.Clients = append(s.Clients, &client)
+	s.clients = append(s.clients, &client)
 	return clientID
 }
 
 func (s *session) removeClient(clientID uuid.UUID) int {
 	newClients := make([]*client, 0)
 
-	for _, c := range s.Clients {
+	for _, c := range s.clients {
 		if c.clientID != clientID {
 			newClients = append(newClients, c)
 		}
 	}
 
-	s.Clients = newClients
-	return len(s.Clients)
+	s.clients = newClients
+	return len(s.clients)
 }
 
 type client struct {
@@ -133,6 +133,7 @@ func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.R
 	defer close(ch)
 
 	session := rt.getOrCreateSession(sessionID, data)
+	session.data = data
 
 	clientID := session.addClient(&ch)
 	w.Header().Set("Content-Type", "application/json+ndjsonpatch")
@@ -159,12 +160,11 @@ func (rt *Realtime) Response(w http.ResponseWriter, r *http.Request, data json.R
 
 func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.RawMessage, error) {
 	session, ok := rt.sessions[sessionID]
-
 	if !ok {
 		return nil, fmt.Errorf("failed to get session for sessionID: %s. Are you sure you have a Response for that sessionID?", sessionID)
 	}
 
-	patch, err := jsonpatch.CreatePatch(session.Data, target)
+	patch, err := jsonpatch.CreatePatch(session.data, target)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (rt *Realtime) createPatch(target json.RawMessage, sessionID string) (json.
 		return nil, err
 	}
 
-	session.Data = target
+	session.data = target
 
 	return patchJson, nil
 }
@@ -196,7 +196,7 @@ func (rt *Realtime) SendMessage(target json.RawMessage, sessionID string) error 
 	}
 
 	if len(patch) != 0 {
-		for _, client := range session.Clients {
+		for _, client := range session.clients {
 			*client.Channel <- patch
 		}
 	}

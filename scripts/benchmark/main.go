@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const NUM_CLIENTS = 16
+const NUM_CLIENTS = 2
 
 func main() {
 	var wg sync.WaitGroup
